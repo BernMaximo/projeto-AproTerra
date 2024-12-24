@@ -14,15 +14,8 @@ connection_string = "mongodb+srv://gustavomaximo072:400515@aprodatabase.cnvcr.mo
 
 client = MongoClient(connection_string)
 db_connection = client["AproDatabase"] #conexão com o banco de dados
-print(db_connection), print()
 
 collection = db_connection.get_collection("AproCollection") #conexão com a colecão
-print(collection), print()
-
-search_filter = { "Nome": "João" } #adiciona um filtro de pesquisa
-response = collection.find(search_filter)
-print(response), print()
-for registry in response: print(registry), print()
 
 @app.route('/add', methods=['POST'])
 def add_records():
