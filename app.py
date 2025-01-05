@@ -2,12 +2,17 @@ from flask import Flask, request, jsonify, render_template
 from flask_pymongo import PyMongo
 from pymongo import MongoClient #conecta com o banco de dados
 from bson.objectid import ObjectId
+#from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return render_template('index.html', nome="Usuário")
+
+@app.route('/add-user', methods=['GET']) #rota para exibir o formulário 
+def register_form():
+    return render_template('create-login.html')
 
 app.config['MONGO_URI'] = 'mongodb+srv://gustavomaximo072:400515@aprodatabase.cnvcr.mongodb.net/?retryWrites=true&w=majority'
 connection_string = "mongodb+srv://gustavomaximo072:400515@aprodatabase.cnvcr.mongodb.net/?retryWrites=true&w=majority"
@@ -37,7 +42,6 @@ def add_records():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Rota para ler todos os registros
 @app.route('/read', methods=['GET'])
 def read_records():
     try:
@@ -48,7 +52,6 @@ def read_records():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Rota para atualizar um registro
 @app.route('/update/<id>', methods=['PUT'])
 def update_record(id):
     try:
@@ -62,7 +65,6 @@ def update_record(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Rota para deletar um registro
 @app.route('/delete/<id>', methods=['DELETE'])
 def delete_record(id):
     try:
@@ -73,6 +75,37 @@ def delete_record(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/add-user', methods=['POST']) #rota para processar o registro
+def add_user():
+    if request.content_type == 'application/x-www-form-urlencoded':
+        username = request.form.get('username')
+        celular = request.form.get('celular')
+        email = request.form.get('email')
+        cpf = request.form.get('cpf')
+    else:
+        return jsonify({"error": "Tipo de mídia não suportado."}), 415
+    
+    # Validação básica dos dados
+    if not username or not celular or not email or not cpf:
+        return jsonify({"error": "Todos os campos são obrigatórios"}), 400
+
+    # Hash da senha para segurança
+    #hashed_password = generate_password_hash(data['password'])
+
+    # Simulação de inserção no banco de dados
+    #db_connection.collection.insert_one({
+        #"username": data['username'],
+        #"password": hashed_password,
+        #"celular": data['celular'],
+        #"email": data['email'],
+        #"cpf": data['cpf']
+    #})
+    try:
+        collection.insert_one({"username": username, "celular": celular, "email": email, "cpf": cpf})
+        return jsonify({"message": f"Usuário {username} registrado com sucesso!"}), 201
+    except Exception as e:
+        return jsonify({"error": f"Erro ao inserir no banco de dados: {str(e)}"}), 500
+
 mongo = PyMongo(app)
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
