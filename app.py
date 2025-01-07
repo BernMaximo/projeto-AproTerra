@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, render_template
 from flask_pymongo import PyMongo
 from pymongo import MongoClient #conecta com o banco de dados
 from bson.objectid import ObjectId
-#from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
+import random
 
 app = Flask(__name__)
 
@@ -21,6 +22,9 @@ client = MongoClient(connection_string)
 db_connection = client["AproDatabase"] #conexão com o banco de dados
 
 collection = db_connection.get_collection("AproCollection") #conexão com a colecão
+
+def generate_user_key(): #gera uma chave de 6 dígitos única
+    return str(random.randint(100000, 999999))
 
 @app.route('/add', methods=['POST'])
 def add_records():
@@ -78,31 +82,33 @@ def delete_record(id):
 @app.route('/add-user', methods=['POST']) #rota para processar o registro
 def add_user():
     if request.content_type == 'application/x-www-form-urlencoded':
-        username = request.form.get('username')
-        celular = request.form.get('celular')
-        email = request.form.get('email')
-        cpf = request.form.get('cpf')
+            username = request.form.get('username')
+            celular = request.form.get('celular')
+            email = request.form.get('email')
+            cpf = request.form.get('cpf')
     else:
         return jsonify({"error": "Tipo de mídia não suportado."}), 415
     
-    # Validação básica dos dados
     if not username or not celular or not email or not cpf:
         return jsonify({"error": "Todos os campos são obrigatórios"}), 400
 
-    # Hash da senha para segurança
-    #hashed_password = generate_password_hash(data['password'])
+    #if db_connection.users.find_one():
+        #return jsonify({"error": "CPF já cadastrado"}), 409
 
-    # Simulação de inserção no banco de dados
-    #db_connection.collection.insert_one({
-        #"username": data['username'],
-        #"password": hashed_password,
-        #"celular": data['celular'],
-        #"email": data['email'],
-        #"cpf": data['cpf']
-    #})
+    user_key = generate_user_key()
+    hashed_cpf = generate_password_hash(request.form.get('cpf'))
+
+    user = {
+        "user_name": username,
+        "celular": celular,
+        "email": email,
+        "cpf": hashed_cpf,
+        "user_key": user_key
+    }
+
     try:
-        collection.insert_one({"username": username, "celular": celular, "email": email, "cpf": cpf})
-        return jsonify({"message": f"Usuário {username} registrado com sucesso!"}), 201
+        collection.insert_one(user)
+        return jsonify({"message": f"Usuario {username} registrado com sucesso!", "user_key":user_key}), 201
     except Exception as e:
         return jsonify({"error": f"Erro ao inserir no banco de dados: {str(e)}"}), 500
 
