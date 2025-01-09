@@ -112,6 +112,21 @@ def add_user():
     except Exception as e:
         return jsonify({"error": f"Erro ao inserir no banco de dados: {str(e)}"}), 500
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    user_key = data.get("user_key")
+    cpf = data.get("cpf")
+
+    if not user_key or not cpf:
+        return jsonify({"error": "Chave de usuário e CPF são obrigatórios"}), 400
+    
+    user = db.users.find_one({"user_key": user_key})
+    if user and check_password_hash(user["cpf"], cpf):
+        return jsonify({"message": "Login bem-sucedido"}), 200
+    else:
+        return jsonify({"error": "Credenciais inválidas"}), 401
+
 mongo = PyMongo(app)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
