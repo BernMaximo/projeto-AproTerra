@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_pymongo import PyMongo
-from pymongo import MongoClient #conecta com o banco de dados
+from pymongo import MongoClient
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
@@ -9,11 +9,15 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return render_template('index.html', nome="Usuário")
+    return render_template('index.html') #, nome="Usuário"
 
 @app.route('/add-user', methods=['GET']) #rota para exibir o formulário 
 def register_form():
     return render_template('create-login.html')
+
+@app.route('/login-user', methods=['GET']) #rota para exibir o formulário 
+def login_form():
+    return render_template('login.html')
 
 app.config['MONGO_URI'] = 'mongodb+srv://gustavomaximo072:400515@aprodatabase.cnvcr.mongodb.net/?retryWrites=true&w=majority'
 connection_string = "mongodb+srv://gustavomaximo072:400515@aprodatabase.cnvcr.mongodb.net/?retryWrites=true&w=majority"
@@ -112,21 +116,22 @@ def add_user():
     except Exception as e:
         return jsonify({"error": f"Erro ao inserir no banco de dados: {str(e)}"}), 500
 
-@app.route('/login', methods=['POST'])
+@app.route('/login-user', methods=['POST'])
 def login():
-    data = request.json
-    user_key = data.get("user_key")
-    cpf = data.get("cpf")
+    data = list(collection.find())
+    user_key = request.form.get('user_key')
+    cpf = request.form.get('cpf')
 
     if not user_key or not cpf:
         return jsonify({"error": "Chave de usuário e CPF são obrigatórios"}), 400
     
-    user = db.users.find_one({"user_key": user_key})
+    user = collection.find_one({"user_key": user_key})
+    username = user["user_name"]
     if user and check_password_hash(user["cpf"], cpf):
-        return jsonify({"message": "Login bem-sucedido"}), 200
+        return jsonify({"message": f"Login bem-sucedido, bem vindo {username}"}), 200
     else:
-        return jsonify({"error": "Credenciais inválidas"}), 401
+        return jsonify({"error": "Credenciais invalidas"}), 401
 
 mongo = PyMongo(app)
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)
