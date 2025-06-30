@@ -26,7 +26,7 @@ def receber_dados():
 
     try:
         conn = mysql.connector.connect(
-            host='192.168.15.97',            # 192.168.0.33
+            host=' 172.20.10.3',            # 192.168.0.33
             user='root',
             password='1234',
             database='aproterra'
